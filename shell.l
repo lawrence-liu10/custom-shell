@@ -21,8 +21,25 @@ void myunputc(int c) {
 %}
 
 %option noyywrap
+%x ENV_MODE
+
 
 %%
+([$])(?=[^\(]) { // matches a $ that doesn’t come before a (
+  BEGIN(ENV_MODE); // activate ENV_MODE
+}
+
+<ENV_MODE>[^ \n\t] {
+  yyval.cpp_string = new std::string(yytext);
+  //... code for environment variable substitution ...
+  BEGIN(INITIAL); // everything goes back to normal
+  return WORD;
+}
+
+[^ \n\t] { // won't match while %x is active
+  yyval.cpp_string = new std::string(yytext);
+  return WORD;
+}
 
 \n {
   return NEWLINE;
@@ -70,3 +87,4 @@ void myunputc(int c) {
   yylval.cpp_string = new std::string(yytext);
   return WORD;
 }
+
