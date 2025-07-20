@@ -36,6 +36,8 @@ Command::Command() {
     _errFile = NULL;
     _background = false;
     _append = false;
+    _inCount = 0;
+    _outCount = 0;
 }
 
 void Command::insertSimpleCommand( SimpleCommand * simpleCommand ) {
@@ -71,6 +73,9 @@ void Command::clear() {
     _background = false;
 
     _append = false;
+    _inCount = 0;
+    _outCount = 0;
+    _errCount = 0;
 }
 
 void Command::print() {
@@ -105,8 +110,28 @@ void Command::execute() {
         return;
     }
 
+    // check for multiple redirects
+    if (_inCount > 1) {
+      printf("Ambiguous input redirect.\n");
+      clear();
+      Shell::prompt();
+      return;
+    }
+    else if (_outCount > 1) {
+      printf("Ambiguous output redirect.\n");
+      clear();
+      Shell::prompt();
+      return;
+    }
+    else if (_errCount > 1) {
+      printf("Ambiguous error redirect.\n");
+      clear();
+      Shell::prompt();
+      return;
+    }
+
     // Print contents of Command data structure
-    print();
+    //print();
 
     // Add execution here
     // For every simple command fork a new process
@@ -114,20 +139,21 @@ void Command::execute() {
     // and call exec
 
     // save default in, out, and err
-    int defaultin = dup( 0 );
-	int defaultout = dup( 1 );
-	int defaulterr = dup( 2 );
-    
+    int defaultin  = dup( 0 );
+    int defaultout = dup( 1 );
+    int defaulterr = dup( 2 );
+
     // read file input, or use stdin
     int fdin;
     if (_inFile) {
         fdin = open(_inFile->c_str(), O_RDONLY);
-    }   
+    }
     else {
         fdin = dup(defaultin);
     }
 
     // create err file for RW if directing, and check if appending
+
     int fderr;
     if (_errFile) {
         if(_append) {
@@ -149,7 +175,7 @@ void Command::execute() {
     std::vector<pid_t> childPids;
 
     for (unsigned long i = 0; i < _simpleCommands.size(); i++) {
-        
+
         dup2(prevPipeRead, 0);
         close(prevPipeRead);
 
@@ -222,7 +248,7 @@ void Command::execute() {
     // Clear to prepare for next command
     clear();
 
-    // Print new prompt
+    // Print new prompt (only when being used by a person)
     Shell::prompt();
 }
 
