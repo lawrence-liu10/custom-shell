@@ -14,6 +14,7 @@
 %code requires
 {
 #include <string>
+#include <cstring>
 
 #if __cplusplus > 199711L
 #define register      // Deprecated in C++11 so remove the keyword
@@ -64,7 +65,7 @@ command:
 
 simple_command:	// command_line
   pipe_list background_opt io_modifier_list  NEWLINE {
-    printf("   Yacc: Execute command\n");
+   // printf("   Yacc: Execute command\n");
     Shell::_currentCommand.execute();
   }
   | NEWLINE 
@@ -85,14 +86,23 @@ argument_list:
 
 argument:
   WORD {
-    printf("   Yacc: insert argument \"%s\"\n", $1->c_str());
+    //printf("   Yacc: insert argument \"%s\"\n", $1->c_str());
     Command::_currentSimpleCommand->insertArgument( $1 );
   }
   ;
 
 command_word:
   WORD {
-    printf("   Yacc: insert command \"%s\"\n", $1->c_str());
+   // printf("   Yacc: insert command \"%s\"\n", $1->c_str());
+
+
+   const char *ext = "exit";
+    if (!strcmp( $1->c_str(), ext)) {
+      printf("\nGood bye!!\n\n");
+      exit(0);
+    }
+   
+
     Command::_currentSimpleCommand = new SimpleCommand();
     Command::_currentSimpleCommand->insertArgument( $1 );
   }
@@ -100,31 +110,39 @@ command_word:
 
 iomodifier_opt:
   GREAT WORD {
-    printf("   Yacc: insert output \"%s\"\n", $2->c_str());
+    //printf("   Yacc: insert output \"%s\"\n", $2->c_str());
+    Shell::_currentCommand._outCount++;
     Shell::_currentCommand._outFile = $2;
   }
   | GREATGREAT WORD {
-    printf("   Yacc: append output \"%s\"\n", $2->c_str());
+   // printf("   Yacc: append output \"%s\"\n", $2->c_str());
+    Shell::_currentCommand._outCount++;
     Shell::_currentCommand._append = true;
     Shell::_currentCommand._outFile = $2;
   }
   | LESS WORD {
-    printf("   Yacc: insert input \"%s\"\n", $2->c_str());
+   // printf("   Yacc: insert input \"%s\"\n", $2->c_str());
+    Shell::_currentCommand._inCount++;
     Shell::_currentCommand._inFile = $2;
   }
   | GREATAMPERSAND WORD {
-    printf("   Yacc: insert output and error \"%s\"\n", $2->c_str());
+   // printf("   Yacc: insert output and error \"%s\"\n", $2->c_str());
+    Shell::_currentCommand._outCount++;
+    Shell::_currentCommand._errCount++;
     Shell::_currentCommand._outFile = $2;
     Shell::_currentCommand._errFile = $2;
   }
   | GREATGREATAMPERSAND WORD {
-    printf("   Yacc: append output and error \"%s\"\n", $2->c_str());
+   // printf("   Yacc: append output and error \"%s\"\n", $2->c_str());
+    Shell::_currentCommand._outCount++;
+    Shell::_currentCommand._errCount++;
     Shell::_currentCommand._append = true;
     Shell::_currentCommand._outFile = $2;
     Shell::_currentCommand._errFile = $2;
   }
   | TWOGREAT WORD {
-    printf("   Yacc: insert error \"%s\"\n", $2->c_str());
+   // printf("   Yacc: insert error \"%s\"\n", $2->c_str());
+    Shell::_currentCommand._errCount++;
     Shell::_currentCommand._errFile = $2;
   }
   | /* can be empty */ 
