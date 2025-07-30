@@ -11,7 +11,7 @@
  * Also there is no automatic echo.
  */
 
-void tty_raw_mode(void)
+void shell_tty_raw_mode(void)
 {
 	struct termios tty_attr;
      
